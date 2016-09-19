@@ -27,6 +27,8 @@
 *.i*86
 *.x86_64
 *.hex
+tools/wav_info/wav_info
+tools/wav_gain/wav_gain
 
 # Debug files
 *.dSYM/
