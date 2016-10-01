@@ -12,7 +12,7 @@ static void print_info (char *filename)
 	if (f == NULL)
 	{
 		printf ("Error: Couldn't open the file!\n");
-		return -1;
+		return;
 	}
 	
 	wav_read (&wavfile, f);
