@@ -32,7 +32,6 @@ union _wav_chunk_content
 {
 	wav_header header;
 	wav_format format;
-	unsigned char data[WAV_CHUNK_LEN];
 };
 
 struct _wav_chunk
