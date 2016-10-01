@@ -123,18 +123,16 @@ void wav_read (wav_file *wavfile, FILE *f)
 				break;
 			}
 			
-			wavfile->datablocks = chunk.chunk_size / 2;
+			wavfile->datablocks = chunk.chunk_size / sizeof (int);
 			
 			wavfile->data = (int*) malloc (sizeof (int) * wavfile->datablocks);
 			fread (wavfile->data, sizeof (int) * wavfile->datablocks, 1, f);
-			
 			break;
 		}
 		else
 		{
 			printf ("Unknown chunk: %s!\n", chunk.chunk_id);
 			fseek (f, chunk.chunk_size, SEEK_CUR);
-			break;
 		}
 	}
 }
@@ -145,7 +143,7 @@ void wav_write (wav_file *wavfile, FILE *f)
 	char chunk_id[5];
 	
 	/* Header */
-	chunk_size = 36 + (wavfile->datablocks * 2);
+	chunk_size = 36 + (wavfile->datablocks * sizeof (int));
 	strcpy (chunk_id, WAV_CHUNKID_RIFF);
 	
 	fwrite (chunk_id, sizeof (char) * 4, 1, f);
@@ -163,31 +161,22 @@ void wav_write (wav_file *wavfile, FILE *f)
 	wav_write_format (&wavfile->format, f);
 	
 	/* Data */
-	chunk_size = wavfile->datablocks * 2;
+	chunk_size = wavfile->datablocks * sizeof (int);
 	strcpy (chunk_id, WAV_CHUNKID_DATA);
 	
 	fwrite (chunk_id, sizeof (char) * 4, 1, f);
 	fwrite (&chunk_size, sizeof (chunk_size), 1, f);
 	
-	fwrite (wavfile->data, sizeof (short) * wavfile->datablocks, 1, f);
+	fwrite (wavfile->data, sizeof (int) * wavfile->datablocks, 1, f);
 }
-
-/* Filters */
 
 void wav_apply_gain (wav_file *wavfile, double gain)
 {
-	unsigned int i, j;
+	unsigned int i;
 	
-	for (i = 0; i < wavfile->datablocks; )
+	for (i = 0; i < wavfile->datablocks; i++)
 	{
-		for (j = 0; j < wavfile->format.channels; j++, i++)
-		{
-			if (i < 100)
-			{
-				printf ("%u\n", wavfile->data[i]);
-			}
-			
-			wavfile->data[i] *= gain;
-		}
+		/* Gain the left and right channel of the sample! */
+		wavfile->data[i] = (int)((wavfile->data[i] & 0xFFFF) * gain) | ((int)(((wavfile->data[i] & 0xFFFF0000) >> 16) * gain) << 16);
 	}
 }
