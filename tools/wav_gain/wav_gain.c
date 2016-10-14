@@ -2,36 +2,37 @@
 #include <stdio.h>
 #include "../../libwav.h"
 
-static void apply_gain (char *filename, char *filename_out)
+static void apply_gain (wav_file *wavfile, const double gain)
 {
-	FILE *f, *outfile;
+	unsigned int i;
+	
+	for (i = 0; i < wavfile->datablocks; i++)
+	{
+		/* Gain the left and right channel of the sample! */
+		wavfile->data[i] = (int)((wavfile->data[i] & 0xFFFF) * gain) | ((int)(((wavfile->data[i] & 0xFFFF0000) >> 16) * gain) << 16);
+	}
+}
+
+static void gain_file (const char *filename, const char *filename_out)
+{
+	unsigned int i;
 	wav_file wavfile;
 	
-	f = fopen (filename, "rb");
-	
-	if (f == NULL)
+	if (wav_read (&wavfile, filename) != WAV_OK)
 	{
-		printf ("Error: Couldn't open the file!\n");
+		printf ("Error: Couldn't read the file!\n");
 		return;
 	}
 	
-	outfile = fopen (filename_out, "wb");
+	apply_gain (&wavfile, 2.0);
 	
-	if (outfile == NULL)
+	
+	if (wav_write (&wavfile, filename_out) != WAV_OK);
 	{
-		fclose (f);
-		return;
+		printf ("Error: Couldn't write the file!\n");
 	}
 	
-	wav_read (&wavfile, f);
-	
-	wav_apply_gain (&wavfile, 2.0);
-	
-	wav_write (&wavfile, outfile);
 	wav_free (&wavfile);
-	
-	fclose (f);
-	fclose (outfile);
 }
 
 int main (int argc, char *argv[])
@@ -40,7 +41,7 @@ int main (int argc, char *argv[])
 	
 	if (argc == 3)
 	{
-		apply_gain (argv[1], argv[2]);
+		gain_file (argv[1], argv[2]);
 	}
 	else
 	{
