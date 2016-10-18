@@ -197,7 +197,7 @@ int wav_write (const wav_file *wavfile, const char *filename)
 	wav_chunk_write (&chunk, f);
 	
 	/* Data */
-	wav_chunk_init (&chunk, WAV_CHUNKID_DATA, sizeof (int) * wavfile->datablocks, &wavfile->data);
+	wav_chunk_init (&chunk, WAV_CHUNKID_DATA, sizeof (int) * wavfile->datablocks, wavfile->data);
 	wav_chunk_write (&chunk, f);
 	
 	fclose (f);
