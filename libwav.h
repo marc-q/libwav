@@ -9,6 +9,14 @@
 #define WAV_CHUNKID_FORMAT "fmt "
 #define WAV_CHUNKID_DATA "data"
 
+enum 
+{
+	WAV_FILE_NOT_OPENED = -3,
+	WAV_INVALID_FILE,
+	WAV_UNKNOWN_CHUNKID,
+	WAV_OK = 0
+};
+
 struct _wav_header
 {
 	char riff_type[5];
@@ -32,6 +40,7 @@ union _wav_chunk_content
 {
 	wav_header header;
 	wav_format format;
+	int *data;
 };
 
 struct _wav_chunk
@@ -53,21 +62,25 @@ struct _wav_file
 
 typedef struct _wav_file wav_file;
 
-void wav_read_format (wav_format*, FILE*);
-void wav_print_format (wav_format*);
-void wav_write_format (wav_format*, FILE*);
+/* WAV_FORMAT */
+int wav_format_write (const wav_format*, FILE*);
+int wav_format_read (wav_format*, FILE*);
+void wav_format_print (const wav_format*);
 
-void wav_read_header (wav_header*, FILE*);
-void wav_write_header (wav_header*, FILE*);
-void wav_print_header (wav_header*);
+/* WAV_HEADER */
+int wav_header_write (const wav_header*, FILE*);
+int wav_header_read (wav_header*, FILE*);
+void wav_header_print (const wav_header*);
 
-void wav_read_chunk (wav_chunk*, FILE*);
-void wav_print_chunk (wav_chunk*);
+/* WAV_CHUNK */
+void wav_chunk_init (wav_chunk*, const char*, const int, const void*);
+int wav_chunk_write (const wav_chunk*, FILE*);
+int wav_chunk_read (wav_chunk*, FILE*);
+void wav_chunk_print (const wav_chunk*);
 
+/* WAV_FILE */
 void wav_free (wav_file*);
-void wav_read (wav_file*, FILE*);
-void wav_write (wav_file*, FILE*);
-
-void wav_apply_gain (wav_file*, double);
+int wav_write (const wav_file*, const char*);
+int wav_read (wav_file*, const char*);
 
 #endif /* __LIBWAV_H__ */

@@ -4,24 +4,17 @@
 
 static void print_info (char *filename)
 {
-	FILE *f;
 	wav_file wavfile;
 	
-	f = fopen (filename, "rb");
-	
-	if (f == NULL)
+	if (wav_read (&wavfile, filename) != WAV_OK)
 	{
 		printf ("Error: Couldn't open the file!\n");
 		return;
 	}
 	
-	wav_read (&wavfile, f);
-	wav_print_header (&wavfile.header);
-	wav_print_format (&wavfile.format);
-	
+	wav_header_print (&wavfile.header);
+	wav_format_print (&wavfile.format);
 	wav_free (&wavfile);
-	
-	fclose (f);
 }
 
 int main (int argc, char *argv[])
