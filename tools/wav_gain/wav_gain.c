@@ -26,8 +26,7 @@ static void gain_file (const char *filename, const char *filename_out)
 	
 	apply_gain (&wavfile, 2.0);
 	
-	
-	if (wav_write (&wavfile, filename_out) != WAV_OK);
+	if (wav_write (&wavfile, filename_out) != WAV_OK)
 	{
 		printf ("Error: Couldn't write the file!\n");
 	}
