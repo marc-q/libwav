@@ -66,12 +66,12 @@ int wav_format_read (wav_format *format, FILE *f)
 
 void wav_format_print (const wav_format *format)
 {
-	printf ("Format:\t\t%hi\n", format->format);
-	printf ("Channels:\t%hi\n", format->channels);
-	printf ("Samplerate:\t%i\n", format->samplerate);
-	printf ("Bytespersec:\t%i\n", format->bytespersec);
-	printf ("Blockalign:\t%hi\n", format->blockalign);
-	printf ("Bitwidth:\t%hi\n", format->bitwidth);
+	printf ("Format:\t\t%hu\n", format->format);
+	printf ("Channels:\t%hu\n", format->channels);
+	printf ("Samplerate:\t%u\n", format->samplerate);
+	printf ("Bytespersec:\t%u\n", format->bytespersec);
+	printf ("Blockalign:\t%hu\n", format->blockalign);
+	printf ("Bitwidth:\t%hu\n", format->bitwidth);
 }
 
 /* WAV_CHUNK */
@@ -157,7 +157,7 @@ int wav_chunk_read (wav_chunk *chunk, FILE *f)
 void wav_chunk_print (const wav_chunk *chunk)
 {
 	printf ("Chunk ID:\t%s\n", chunk->chunk_id);
-	printf ("Chunk Size:\t%i\n", chunk->chunk_size);
+	printf ("Chunk Size:\t%u\n", chunk->chunk_size);
 	
 	if (utils_streq (chunk->chunk_id, WAV_CHUNKID_RIFF))
 	{
