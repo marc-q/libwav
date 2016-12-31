@@ -1,4 +1,4 @@
-/* Copyright 2016 Marc Volker Dickmann */
+/* Copyright 2016 - 2017 Marc Volker Dickmann */
 #include <stdio.h>
 #include "../../libwav.h"
 
@@ -19,7 +19,7 @@ static void print_info (char *filename)
 
 int main (int argc, char *argv[])
 {
-	printf ("LibWAV v. 0.0.1 A (c) 2016 Marc Volker Dickmann\n\n");
+	printf ("LibWAV v. 0.0.1 A (c) 2016 - 2017 Marc Volker Dickmann\n\n");
 	
 	if (argc == 2)
 	{
