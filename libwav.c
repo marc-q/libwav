@@ -76,7 +76,7 @@ void wav_format_print (const wav_format *format)
 
 /* WAV_CHUNK */
 
-void wav_chunk_init (wav_chunk *chunk, const char *id, const int size, const void *content)
+void wav_chunk_init (wav_chunk *chunk, const char *id, const unsigned int size, const void *content)
 {
 	strcpy (chunk->chunk_id, id);
 	chunk->chunk_size = size;
