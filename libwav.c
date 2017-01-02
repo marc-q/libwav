@@ -12,7 +12,7 @@ static bool utils_streq (const char *a, const char *b)
 
 /* WAV_HEADER */
 
-int wav_header_write (const wav_header *header, FILE *f)
+enum wav_error wav_header_write (const wav_header *header, FILE *f)
 {
 	if (f == NULL)
 	{
@@ -23,7 +23,7 @@ int wav_header_write (const wav_header *header, FILE *f)
 	return WAV_OK;
 }
 
-int wav_header_read (wav_header *header, FILE *f)
+enum wav_error wav_header_read (wav_header *header, FILE *f)
 {
 	if (f == NULL)
 	{
@@ -42,7 +42,7 @@ void wav_header_print (const wav_header *header)
 
 /* WAV_FORMAT */
 
-int wav_format_write (const wav_format *format, FILE *f)
+enum wav_error wav_format_write (const wav_format *format, FILE *f)
 {
 	if (f == NULL)
 	{
@@ -53,7 +53,7 @@ int wav_format_write (const wav_format *format, FILE *f)
 	return WAV_OK;
 }
 
-int wav_format_read (wav_format *format, FILE *f)
+enum wav_error wav_format_read (wav_format *format, FILE *f)
 {
 	if (f == NULL)
 	{
@@ -96,7 +96,7 @@ void wav_chunk_init (wav_chunk *chunk, const char *id, const int size, const voi
 	}
 }
 
-int wav_chunk_write (const wav_chunk *chunk, FILE *f)
+enum wav_error wav_chunk_write (const wav_chunk *chunk, FILE *f)
 {
 	if (f == NULL)
 	{
@@ -124,7 +124,7 @@ int wav_chunk_write (const wav_chunk *chunk, FILE *f)
 	return WAV_UNKNOWN_CHUNKID;
 }
 
-int wav_chunk_read (wav_chunk *chunk, FILE *f)
+enum wav_error wav_chunk_read (wav_chunk *chunk, FILE *f)
 {
 	if (f == NULL)
 	{
@@ -176,7 +176,7 @@ void wav_free (wav_file *wavfile)
 	free (wavfile->data);
 }
 
-int wav_write (const wav_file *wavfile, const char *filename)
+enum wav_error wav_write (const wav_file *wavfile, const char *filename)
 {
 	FILE *f;
 	wav_chunk chunk;
@@ -204,7 +204,7 @@ int wav_write (const wav_file *wavfile, const char *filename)
 	return WAV_OK;
 }
 
-int wav_read (wav_file *wavfile, const char *filename)
+enum wav_error wav_read (wav_file *wavfile, const char *filename)
 {
 	FILE *f;
 	wav_chunk chunk;
