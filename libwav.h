@@ -1,8 +1,6 @@
 #ifndef __LIBWAV_H__
 #define __LIBWAV_H__
 
-#define WAV_MAGIC 0x0
-
 #define WAV_CHUNK_LEN 512
 
 #define WAV_CHUNKID_RIFF "RIFF"
