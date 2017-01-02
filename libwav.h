@@ -71,7 +71,7 @@ enum wav_error wav_header_read (wav_header*, FILE*);
 void wav_header_print (const wav_header*);
 
 /* WAV_CHUNK */
-void wav_chunk_init (wav_chunk*, const char*, const int, const void*);
+void wav_chunk_init (wav_chunk*, const char*, const unsigned int, const void*);
 enum wav_error wav_chunk_write (const wav_chunk*, FILE*);
 enum wav_error wav_chunk_read (wav_chunk*, FILE*);
 void wav_chunk_print (const wav_chunk*);
