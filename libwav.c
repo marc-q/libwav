@@ -147,7 +147,7 @@ enum wav_error wav_chunk_read (wav_chunk *chunk, FILE *f)
 	}
 	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_DATA))
 	{
-		chunk->content.data = (int*) malloc (chunk->chunk_size);
+		chunk->content.data = malloc (chunk->chunk_size);
 		fread (chunk->content.data, sizeof (int), chunk->chunk_size / sizeof (int), f);
 	}
 	
