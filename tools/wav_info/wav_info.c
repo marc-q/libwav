@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include "../../libwav.h"
 
-static void print_info (char *filename)
+static void
+print_info (const char *filename)
 {
 	wav_file wavfile;
 	
@@ -17,7 +18,8 @@ static void print_info (char *filename)
 	wav_free (&wavfile);
 }
 
-int main (int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
 	printf ("LibWAV v. 0.0.1 A (c) 2016 - 2017 Marc Volker Dickmann\n\n");
 	
