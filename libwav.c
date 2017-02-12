@@ -1,14 +1,13 @@
 /* Copyright 2016 - 2017 Marc Volker Dickmann */
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
 #include "libwav.h"
 
-static bool
-utils_streq (const char *a, const char *b)
+static enum wav_error
+wav_content_read (wav_chunk *chunk, FILE *f)
 {
-	return (strlen (a) == strlen (b)) && (strcmp (a, b) == 0); 
+	const size_t items = chunk->chunk_size / sizeof (int);
+	return (fread (chunk->content.data, sizeof (int), items, f) == items ? WAV_OK : WAV_ERROR); 
 }
 
 // WAV_HEADER
@@ -20,8 +19,10 @@ wav_header_write (const wav_header *header, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	
-	fwrite (header->riff_type, sizeof (char), 4, f);
+	else if (fwrite (&header->riff_type.hash, sizeof (unsigned int), 1, f) != 1)
+	{
+		return WAV_ERROR;
+	}
 	return WAV_OK;
 }
 
@@ -32,16 +33,17 @@ wav_header_read (wav_header *header, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	
-	fread (header->riff_type, sizeof (char), 4, f);
-	header->riff_type[4] = '\0';
+	else if (fread (&header->riff_type.hash, sizeof (unsigned int), 1, f) != 1)
+	{
+		return WAV_ERROR;
+	}
 	return WAV_OK;
 }
 
 void
 wav_header_print (const wav_header *header)
 {
-	printf ("Riff Type:\t%s\n", header->riff_type);
+	printf ("Riff Type:\t%.4s\n", header->riff_type.str);
 }
 
 // WAV_FORMAT
@@ -53,8 +55,10 @@ wav_format_write (const wav_format *format, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	
-	fwrite (format, sizeof (wav_format), 1, f);	
+	else if (fwrite (format, sizeof (wav_format), 1, f) != 1)
+	{
+		return WAV_ERROR;
+	}
 	return WAV_OK;
 }
 
@@ -65,8 +69,10 @@ wav_format_read (wav_format *format, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	
-	fread (format, sizeof (wav_format), 1, f);
+	else if (fread (format, sizeof (wav_format), 1, f) != 1)
+	{
+		return WAV_ERROR;
+	}
 	return WAV_OK;
 }
 
@@ -84,23 +90,25 @@ wav_format_print (const wav_format *format)
 // WAV_CHUNK
 
 void
-wav_chunk_init (wav_chunk *chunk, const char *id, const unsigned int size, const void *content)
+wav_chunk_init (wav_chunk *chunk, const unsigned int id, const unsigned int size, const void *content)
 {
-	strcpy (chunk->chunk_id, id);
+	chunk->chunk_id.hash = id;
 	chunk->chunk_size = size;
 	
 	// Init the content based on the chunkid:
-	if (utils_streq (chunk->chunk_id, WAV_CHUNKID_RIFF))
+	switch (chunk->chunk_id.hash)
 	{
-		chunk->content.header = *(wav_header*) content;
-	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_FORMAT))
-	{
-		chunk->content.format = *(wav_format*) content;
-	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_DATA))
-	{
-		chunk->content.data = (int*) content;
+		case WAV_CHUNKID_RIFF:
+			chunk->content.header = *(wav_header*) content;
+			break;
+		case WAV_CHUNKID_FORMAT:
+			chunk->content.format = *(wav_format*) content;
+			break;
+		case WAV_CHUNKID_DATA:
+			chunk->content.data = (int*) content;
+			break;
+		default:
+			break;	
 	}
 }
 
@@ -111,25 +119,25 @@ wav_chunk_write (const wav_chunk *chunk, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	
-	fwrite (chunk->chunk_id, sizeof (char), 4, f);
-	fwrite (&chunk->chunk_size, sizeof (chunk->chunk_size), 1, f);
+	else if (fwrite (&chunk->chunk_id.hash, sizeof (unsigned int), 1, f) != 1 ||
+		 fwrite (&chunk->chunk_size, sizeof (chunk->chunk_size), 1, f) != 1)
+	{
+		return WAV_ERROR;
+	}
 	
 	// Write the content based on the chunkid:
-	if (utils_streq (chunk->chunk_id, WAV_CHUNKID_RIFF))
+	switch (chunk->chunk_id.hash)
 	{
-		return wav_header_write (&chunk->content.header, f);
+		case WAV_CHUNKID_RIFF:
+			return wav_header_write (&chunk->content.header, f);
+		case WAV_CHUNKID_FORMAT:
+			return wav_format_write (&chunk->content.format, f);
+		case WAV_CHUNKID_DATA:
+			fwrite (chunk->content.data, sizeof (int), chunk->chunk_size / sizeof (int), f);
+			return WAV_OK;
+		default:
+			break;
 	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_FORMAT))
-	{
-		return wav_format_write (&chunk->content.format, f);
-	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_DATA))
-	{
-		fwrite (chunk->content.data, sizeof (int), chunk->chunk_size / sizeof (int), f);
-		return WAV_OK;
-	}
-	
 	return WAV_UNKNOWN_CHUNKID;
 }
 
@@ -140,43 +148,47 @@ wav_chunk_read (wav_chunk *chunk, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	
-	fread (chunk->chunk_id, sizeof (char), 4, f);
-	chunk->chunk_id[4] = '\0';
-	
-	fread (&chunk->chunk_size, sizeof (chunk->chunk_size), 1, f);
+	else if (fread (&chunk->chunk_id.hash, sizeof (unsigned int), 1, f) != 1 ||
+		 fread (&chunk->chunk_size, sizeof (chunk->chunk_size), 1, f) != 1)
+	{
+		return WAV_ERROR;
+	}
 	
 	// Read the content based on the chunkid:
-	if (utils_streq (chunk->chunk_id, WAV_CHUNKID_RIFF))
+	switch (chunk->chunk_id.hash)
 	{
-		wav_header_read (&chunk->content.header, f);
+		case WAV_CHUNKID_RIFF:
+			wav_header_read (&chunk->content.header, f);
+			break;
+		case WAV_CHUNKID_FORMAT:
+			wav_format_read (&chunk->content.format, f);
+			break;
+		case WAV_CHUNKID_DATA:
+			chunk->content.data = malloc (chunk->chunk_size);
+			wav_content_read (chunk, f);
+			break;
+		default:
+			break;	
 	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_FORMAT))
-	{
-		wav_format_read (&chunk->content.format, f);
-	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_DATA))
-	{
-		chunk->content.data = malloc (chunk->chunk_size);
-		fread (chunk->content.data, sizeof (int), chunk->chunk_size / sizeof (int), f);
-	}
-	
 	return WAV_OK;
 }
 
 void
 wav_chunk_print (const wav_chunk *chunk)
 {
-	printf ("Chunk ID:\t%s\n", chunk->chunk_id);
+	printf ("Chunk ID:\t%.4s\n", chunk->chunk_id.str);
 	printf ("Chunk Size:\t%u\n", chunk->chunk_size);
 	
-	if (utils_streq (chunk->chunk_id, WAV_CHUNKID_RIFF))
+	switch (chunk->chunk_id.hash)
 	{
-		wav_header_print (&chunk->content.header);
-	}
-	else if (utils_streq (chunk->chunk_id, WAV_CHUNKID_FORMAT))
-	{
-		wav_format_print (&chunk->content.format);
+		case WAV_CHUNKID_RIFF:
+			wav_header_print (&chunk->content.header);
+			break;
+		case WAV_CHUNKID_FORMAT:
+			wav_format_print (&chunk->content.format);
+			break;
+		default:
+			break;	
 	}
 }
 
@@ -228,7 +240,7 @@ wav_read (wav_file *wavfile, const char *filename)
 	
 	// Check if its a valid file:
 	wav_chunk_read (&chunk, f);
-	if (!utils_streq (chunk.chunk_id, WAV_CHUNKID_RIFF))
+	if (chunk.chunk_id.hash != WAV_CHUNKID_RIFF)
 	{
 		fclose (f);
 		return WAV_INVALID_FILE;
@@ -243,23 +255,24 @@ wav_read (wav_file *wavfile, const char *filename)
 	{
 		wav_chunk_read (&chunk, f);
 		
-		if (utils_streq (chunk.chunk_id, WAV_CHUNKID_FORMAT))
+		switch (chunk.chunk_id.hash)
 		{
-			wavfile->format = chunk.content.format;
-		}
-		else if (utils_streq (chunk.chunk_id, WAV_CHUNKID_DATA))
-		{	
-			wavfile->datablocks = chunk.chunk_size / sizeof (int);
-			wavfile->data = chunk.content.data;
-			break;
-		}
-		else
-		{
-			// NOTE: Unknown chunk!
-			fseek (f, chunk.chunk_size, SEEK_CUR);
+			case WAV_CHUNKID_FORMAT:
+				wavfile->format = chunk.content.format;
+				break;
+			case WAV_CHUNKID_DATA:
+				wavfile->datablocks = chunk.chunk_size / sizeof (int);
+				wavfile->data = chunk.content.data;
+				fclose (f);
+				return WAV_OK;
+			default:
+				// NOTE: Unknown chunk!
+				fseek (f, chunk.chunk_size, SEEK_CUR);
+				break;	
 		}
 	}
 	
+	// No DATA chunk found!
 	fclose (f);
-	return WAV_OK;
+	return WAV_ERROR;
 }
