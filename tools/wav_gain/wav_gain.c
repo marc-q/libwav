@@ -8,7 +8,7 @@ apply_gain (wav_file *wavfile, const double gain)
 	for (size_t i = 0; i < wavfile->datablocks; i++)
 	{
 		// Gain the left and right channel of the sample!
-		wavfile->data[i] = (int)((wavfile->data[i] & 0xFFFF) * gain) | ((int)(((wavfile->data[i] & 0xFFFF0000) >> 16) * gain) << 16);
+		wavfile->data[i] = (int)((wavfile->data[i] & 0xFFFF) * gain) | ((int)((wavfile->data[i] >> 16) * gain) << 16);
 	}
 }
 
@@ -46,6 +46,5 @@ main (int argc, char *argv[])
 	{
 		printf ("Usage: wav_gain <filename> <filename_out>!\n");
 	}
-	
 	return 0;
 }
