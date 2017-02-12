@@ -2,20 +2,19 @@
 #include <stdio.h>
 #include "../../libwav.h"
 
-static void apply_gain (wav_file *wavfile, const double gain)
+static void
+apply_gain (wav_file *wavfile, const double gain)
 {
-	unsigned int i;
-	
-	for (i = 0; i < wavfile->datablocks; i++)
+	for (size_t i = 0; i < wavfile->datablocks; i++)
 	{
-		/* Gain the left and right channel of the sample! */
+		// Gain the left and right channel of the sample!
 		wavfile->data[i] = (int)((wavfile->data[i] & 0xFFFF) * gain) | ((int)(((wavfile->data[i] & 0xFFFF0000) >> 16) * gain) << 16);
 	}
 }
 
-static void gain_file (const char *filename, const char *filename_out)
+static void
+gain_file (const char *filename, const char *filename_out)
 {
-	unsigned int i;
 	wav_file wavfile;
 	
 	if (wav_read (&wavfile, filename) != WAV_OK)
@@ -34,7 +33,8 @@ static void gain_file (const char *filename, const char *filename_out)
 	wav_free (&wavfile);
 }
 
-int main (int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
 	printf ("LibWAV v. 0.0.1 A (c) 2016 - 2017 Marc Volker Dickmann\n\n");
 	
