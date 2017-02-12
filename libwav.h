@@ -3,21 +3,37 @@
 
 #define WAV_CHUNK_LEN 512
 
-#define WAV_CHUNKID_RIFF "RIFF"
-#define WAV_CHUNKID_FORMAT "fmt "
-#define WAV_CHUNKID_DATA "data"
+// "RIFF"
+#define WAV_CHUNKID_RIFF 0x46464952
+
+// "fmt "
+#define WAV_CHUNKID_FORMAT 0x20746D66
+
+// "data"
+#define WAV_CHUNKID_DATA 0x61746164
+
+// HASH4
+#ifndef __HASH4_H__
+#define __HASH4_H__
+union _hash4
+{
+	unsigned int hash;
+	char str[4];
+};
+#endif /* __HASH4_H__ */
 
 enum wav_error
 {
-	WAV_FILE_NOT_OPENED = -3,
+	WAV_FILE_NOT_OPENED = -4,
 	WAV_INVALID_FILE,
 	WAV_UNKNOWN_CHUNKID,
+	WAV_ERROR,
 	WAV_OK = 0
 };
 
 struct _wav_header
 {
-	char riff_type[5];
+	union _hash4 riff_type;
 };
 
 typedef struct _wav_header wav_header;
@@ -43,7 +59,7 @@ union _wav_chunk_content
 
 struct _wav_chunk
 {
-	char chunk_id[5];
+	union _hash4 chunk_id;
 	unsigned int chunk_size;
 	union _wav_chunk_content content;
 };
@@ -71,7 +87,7 @@ enum wav_error wav_header_read (wav_header*, FILE*);
 void wav_header_print (const wav_header*);
 
 // WAV_CHUNK
-void wav_chunk_init (wav_chunk*, const char*, const unsigned int, const void*);
+void wav_chunk_init (wav_chunk*, const unsigned int, const unsigned int, const void*);
 enum wav_error wav_chunk_write (const wav_chunk*, FILE*);
 enum wav_error wav_chunk_read (wav_chunk*, FILE*);
 void wav_chunk_print (const wav_chunk*);
