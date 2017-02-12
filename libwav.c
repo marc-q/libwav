@@ -7,7 +7,7 @@ static enum wav_error
 wav_content_read (wav_chunk *chunk, FILE *f)
 {
 	const size_t items = chunk->chunk_size / sizeof (int);
-	return (fread (chunk->content.data, sizeof (int), items, f) == items ? WAV_OK : WAV_ERROR); 
+	return (fread (chunk->content.data, sizeof (int), items, f) == items ? WAV_OK : WAV_ERROR);
 }
 
 // WAV_HEADER
@@ -108,7 +108,7 @@ wav_chunk_init (wav_chunk *chunk, const unsigned int id, const unsigned int size
 			chunk->content.data = (int*) content;
 			break;
 		default:
-			break;	
+			break;
 	}
 }
 
@@ -168,7 +168,7 @@ wav_chunk_read (wav_chunk *chunk, FILE *f)
 			wav_content_read (chunk, f);
 			break;
 		default:
-			break;	
+			break;
 	}
 	return WAV_OK;
 }
@@ -188,7 +188,7 @@ wav_chunk_print (const wav_chunk *chunk)
 			wav_format_print (&chunk->content.format);
 			break;
 		default:
-			break;	
+			break;
 	}
 }
 
@@ -268,7 +268,7 @@ wav_read (wav_file *wavfile, const char *filename)
 			default:
 				// NOTE: Unknown chunk!
 				fseek (f, chunk.chunk_size, SEEK_CUR);
-				break;	
+				break;
 		}
 	}
 	
