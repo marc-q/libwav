@@ -7,6 +7,7 @@ static enum wav_error
 wav_content_read (wav_chunk *chunk, FILE *f)
 {
 	const size_t items = chunk->chunk_size / sizeof (int);
+	
 	return (fread (chunk->content.data, sizeof (int), items, f) == items ? WAV_OK : WAV_ERROR);
 }
 
@@ -19,7 +20,7 @@ wav_header_write (const wav_header *header, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	else if (fwrite (&header->riff_type.hash, sizeof (unsigned int), 1, f) != 1)
+	else if (fwrite (header, sizeof (wav_header), 1, f) != 1)
 	{
 		return WAV_ERROR;
 	}
@@ -33,7 +34,7 @@ wav_header_read (wav_header *header, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	else if (fread (&header->riff_type.hash, sizeof (unsigned int), 1, f) != 1)
+	else if (fread (header, sizeof (wav_header), 1, f) != 1)
 	{
 		return WAV_ERROR;
 	}
@@ -119,7 +120,7 @@ wav_chunk_write (const wav_chunk *chunk, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	else if (fwrite (&chunk->chunk_id.hash, sizeof (unsigned int), 1, f) != 1 ||
+	else if (fwrite (&chunk->chunk_id, sizeof (chunk->chunk_id), 1, f) != 1 ||
 		 fwrite (&chunk->chunk_size, sizeof (chunk->chunk_size), 1, f) != 1)
 	{
 		return WAV_ERROR;
@@ -148,7 +149,7 @@ wav_chunk_read (wav_chunk *chunk, FILE *f)
 	{
 		return WAV_FILE_NOT_OPENED;
 	}
-	else if (fread (&chunk->chunk_id.hash, sizeof (unsigned int), 1, f) != 1 ||
+	else if (fread (&chunk->chunk_id, sizeof (chunk->chunk_id), 1, f) != 1 ||
 		 fread (&chunk->chunk_size, sizeof (chunk->chunk_size), 1, f) != 1)
 	{
 		return WAV_ERROR;
@@ -158,19 +159,16 @@ wav_chunk_read (wav_chunk *chunk, FILE *f)
 	switch (chunk->chunk_id.hash)
 	{
 		case WAV_CHUNKID_RIFF:
-			wav_header_read (&chunk->content.header, f);
-			break;
+			return wav_header_read (&chunk->content.header, f);
 		case WAV_CHUNKID_FORMAT:
-			wav_format_read (&chunk->content.format, f);
-			break;
+			return wav_format_read (&chunk->content.format, f);
 		case WAV_CHUNKID_DATA:
 			chunk->content.data = malloc (chunk->chunk_size);
-			wav_content_read (chunk, f);
-			break;
+			return wav_content_read (chunk, f);
 		default:
-			break;
+			return WAV_UNKNOWN_CHUNKID;
 	}
-	return WAV_OK;
+	return WAV_ERROR;
 }
 
 void
@@ -204,7 +202,6 @@ enum wav_error
 wav_write (const wav_file *wavfile, const char *filename)
 {
 	FILE *f = fopen (filename, "wb");
-	wav_chunk chunk;
 	
 	if (f == NULL)
 	{
@@ -212,6 +209,8 @@ wav_write (const wav_file *wavfile, const char *filename)
 	}
 	
 	// Header
+	wav_chunk chunk;
+	
 	wav_chunk_init (&chunk, WAV_CHUNKID_RIFF, 36 + (sizeof (int) * wavfile->datablocks), &wavfile->header);
 	wav_chunk_write (&chunk, f);
 	
@@ -231,7 +230,6 @@ enum wav_error
 wav_read (wav_file *wavfile, const char *filename)
 {
 	FILE *f = fopen (filename, "rb");
-	wav_chunk chunk;
 	
 	if (f == NULL)
 	{
@@ -239,8 +237,10 @@ wav_read (wav_file *wavfile, const char *filename)
 	}
 	
 	// Check if its a valid file:
-	wav_chunk_read (&chunk, f);
-	if (chunk.chunk_id.hash != WAV_CHUNKID_RIFF)
+	wav_chunk chunk;
+	
+	if (wav_chunk_read (&chunk, f) != WAV_OK ||
+	    chunk.chunk_id.hash != WAV_CHUNKID_RIFF)
 	{
 		fclose (f);
 		return WAV_INVALID_FILE;
