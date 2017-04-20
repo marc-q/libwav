@@ -168,7 +168,6 @@ wav_chunk_read (wav_chunk *chunk, FILE *f)
 		default:
 			return WAV_UNKNOWN_CHUNKID;
 	}
-	return WAV_ERROR;
 }
 
 void
