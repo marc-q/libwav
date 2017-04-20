@@ -137,9 +137,8 @@ wav_chunk_write (const wav_chunk *chunk, FILE *f)
 			fwrite (chunk->content.data, sizeof (int), chunk->chunk_size / sizeof (int), f);
 			return WAV_OK;
 		default:
-			break;
+			return WAV_UNKNOWN_CHUNKID;
 	}
-	return WAV_UNKNOWN_CHUNKID;
 }
 
 enum wav_error
